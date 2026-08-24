@@ -1,0 +1,6 @@
+{
+  "name": "Plexa Studio",
+  "description": "Digital marketing studio website with AI Control Center features including Gemini Chat and Veo 3 Video generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
