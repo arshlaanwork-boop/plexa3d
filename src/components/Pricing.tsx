@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, X, Gift, ArrowRight, LogIn, ClipboardList, Loader2 } from 'lucide-react';
-import { auth, db, googleProvider } from '../lib/firebase';
-import { signInWithPopup, User, onAuthStateChanged } from 'firebase/auth';
+import { Sparkles, X, Gift, ArrowRight, ClipboardList, Loader2 } from 'lucide-react';
+import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 interface PackageDetails {
@@ -17,9 +16,7 @@ export function Pricing() {
   const [selectedPkg, setSelectedPkg] = useState<PackageDetails | null>(null);
   
   // Modal states
-  const [step, setStep] = useState<'login' | 'inquiry' | 'spinning' | 'result'>('login');
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [step, setStep] = useState<'inquiry' | 'spinning' | 'result'>('inquiry');
   
   // Inquiry form states
   const [businessName, setBusinessName] = useState('');
@@ -30,39 +27,16 @@ export function Pricing() {
   // Lucky draw states
   const [currentDiscount, setCurrentDiscount] = useState(0);
   const [finalDiscount, setFinalDiscount] = useState(0);
-  const [inquiryId, setInquiryId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleSelect = (pkg: PackageDetails) => {
     setSelectedPkg(pkg);
     setFinalDiscount(0);
-    if (user) {
-      setStep('inquiry');
-    } else {
-      setStep('login');
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-      setStep('inquiry');
-    } catch (error) {
-      console.error('Login failed:', error);
-      alert('Failed to login. Please try again.');
-    }
+    setStep('inquiry'); // Go directly to inquiry form, NO LOGIN required!
   };
 
   const submitInquiry = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedPkg) return;
+    if (!selectedPkg) return;
 
     setIsSubmitting(true);
     try {
@@ -71,10 +45,8 @@ export function Pricing() {
       const target = selectedPkg.minDiscount + Math.floor(Math.random() * (range + 1)) * 100;
       setFinalDiscount(target);
 
-      // 2. Save inquiry to Firestore
-      const docRef = await addDoc(collection(db, 'inquiries'), {
-        userId: user.uid,
-        userEmail: user.email,
+      // 2. Save inquiry to Firestore directly (No Auth Required)
+      await addDoc(collection(db, 'inquiries'), {
         packageId: selectedPkg.id,
         packageName: selectedPkg.name,
         businessName,
@@ -84,8 +56,6 @@ export function Pricing() {
         finalPrice: selectedPkg.normalPrice - target,
         createdAt: serverTimestamp()
       });
-      
-      setInquiryId(docRef.id);
       
       // 3. Move to spinning animation
       setStep('spinning');
@@ -368,33 +338,6 @@ export function Pricing() {
                 <X size={20} />
               </button>
 
-              {step === 'login' && (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/20">
-                    <LogIn className="text-red-500" size={32} />
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 uppercase tracking-wide">
-                    Create Account
-                  </h3>
-                  <p className="text-gray-400 mb-8">Sign in securely to save your inquiry and unlock your lucky discount for the {selectedPkg.name} package.</p>
-                  
-                  {isAuthLoading ? (
-                    <div className="w-full py-4 flex justify-center text-gray-400">
-                      <Loader2 className="animate-spin" />
-                    </div>
-                  ) : (
-                    <button 
-                      onClick={handleGoogleLogin}
-                      className="w-full py-4 rounded-xl bg-white text-black hover:bg-gray-200 transition-colors font-bold flex items-center justify-center gap-3"
-                    >
-                      <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 52.749 L -8.284 52.749 C -8.574 53.879 -9.214 54.819 -10.144 55.439 L -10.144 57.709 L -6.244 57.709 C -3.964 55.609 -3.264 52.549 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.844 60.279 L -10.144 58.009 C -11.204 58.719 -12.574 59.139 -14.754 59.139 C -18.964 59.139 -22.534 56.289 -23.794 52.479 L -27.814 52.479 L -27.814 55.599 C -25.824 59.559 -20.634 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -23.794 52.479 C -24.114 51.529 -24.294 50.539 -24.294 49.499 C -24.294 48.459 -24.114 47.469 -23.794 46.519 L -23.794 43.399 L -27.814 43.399 C -28.644 45.059 -29.114 46.929 -29.114 48.889 C -29.114 50.849 -28.644 52.719 -27.814 54.379 L -23.794 52.479 Z"/><path fill="#EA4335" d="M -14.754 39.839 C -12.984 39.839 -11.394 40.449 -10.144 41.649 L -6.144 37.649 C -8.804 35.159 -11.514 34.079 -14.754 34.079 C -20.634 34.079 -25.824 37.759 -27.814 41.719 L -23.794 44.839 C -22.534 41.029 -18.964 39.839 -14.754 39.839 Z"/></g></svg>
-                      Continue with Google
-                    </button>
-                  )}
-                  <p className="text-xs text-gray-500 mt-4">We will use this to save your lucky draw result.</p>
-                </>
-              )}
-
               {step === 'inquiry' && (
                 <div className="w-full text-left">
                   <div className="flex items-center gap-4 mb-6">
@@ -502,7 +445,7 @@ export function Pricing() {
                   </div>
 
                   <a 
-                    href={`https://wa.me/919999999999?text=Hi%20PLEXA!%20I%20just%20spun%20the%20Lucky%20Draw%20and%20got%20the%20${selectedPkg.name}%20Package%20for%20a%20final%20price%20of%20₹${(selectedPkg.normalPrice - finalDiscount).toLocaleString('en-IN')}!%20How%20do%20I%20complete%20my%20payment?`}
+                    href={`https://wa.me/919999999999?text=Hi%20PLEXA!%20I%20just%20spun%20the%20Lucky%20Draw%20and%20got%20the%20${selectedPkg.name}%20Package%20for%20a%20final%20price%20of%20₹${(selectedPkg.normalPrice - finalDiscount).toLocaleString('en-IN')}!%20My%20Business:%20${businessName}.%20How%20do%20I%20complete%20my%20payment?`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] transition-colors font-bold text-white shadow-[0_0_20px_rgba(37,211,102,0.3)] flex items-center justify-center gap-2"
