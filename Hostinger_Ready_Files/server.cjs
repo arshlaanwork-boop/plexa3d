@@ -64,15 +64,22 @@ async function startServer() {
     try {
       const { prompt } = req.body;
       const ai = getAIClient();
-      const response = await ai.models.generateImages({
-        model: "veo-3.1-fast-generate-preview",
-        prompt,
-        config: {
-          aspectRatio: "16:9",
-          outputMimeType: "video/mp4"
+      const interaction = await ai.interactions.create({
+        model: "gemini-omni-flash-preview",
+        input: prompt,
+        background: false,
+        store: false,
+        stream: false,
+        response_format: {
+          type: "video",
+          aspect_ratio: "16:9"
         }
-      });
-      const videoBase64 = response.generatedImages[0].image.imageBytes;
+      }, { timeout: 3e5 });
+      const videoPart = interaction.output_video;
+      if (!videoPart || !videoPart.data) {
+        throw new Error("No video generated");
+      }
+      const videoBase64 = videoPart.data;
       res.json({ videoBase64 });
     } catch (error) {
       console.error("Video gen error:", error);

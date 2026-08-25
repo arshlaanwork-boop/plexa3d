@@ -3,11 +3,12 @@ import { motion } from 'motion/react';
 import { db, auth, loginWithGoogle, logout } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { LogOut, ExternalLink, MessageCircle, FileText, LayoutDashboard, Loader2, User as UserIcon, ClipboardList } from 'lucide-react';
+import { LogOut, ExternalLink, MessageCircle, FileText, LayoutDashboard, Loader2, User as UserIcon, ClipboardList, AlertCircle } from 'lucide-react';
 
 export function Admin() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loginError, setLoginError] = useState<string | null>(null);
   
   const [applications, setApplications] = useState<any[]>([]);
   const [inquiries, setInquiries] = useState<any[]>([]);
@@ -21,8 +22,22 @@ export function Admin() {
     return () => unsubscribe();
   }, []);
 
+  const handleLogin = async () => {
+    setLoginError(null);
+    try {
+      await loginWithGoogle();
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        setLoginError('This domain is not authorized in Firebase. Please add "goplexa.in" to your Firebase Console -> Authentication -> Settings -> Authorized domains.');
+      } else {
+        setLoginError(`Login failed: ${error.message}`);
+      }
+    }
+  };
+
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.email !== 'arshlaanshakil4a.jssp@gmail.com') return;
     
     // Listen to creator applications
     const appsRef = collection(db, 'creator_applications');
@@ -73,23 +88,34 @@ export function Admin() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
           <p className="text-gray-400 mb-8 text-sm">
-            {user ? "You do not have permission to view this page." : "Please sign in with your authorized Google account to access applications and inquiries."}
+            {user && user.email !== 'arshlaanshakil4a.jssp@gmail.com' 
+              ? `You are logged in as ${user.email}, but this account does not have Admin access.` 
+              : "Please sign in with your authorized Google account to access applications and inquiries."}
           </p>
+
+          {loginError && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3 text-left">
+              <AlertCircle className="text-red-500 w-5 h-5 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{loginError}</p>
+            </div>
+          )}
           
-          {!user ? (
+          {!user || user.email !== 'arshlaanshakil4a.jssp@gmail.com' ? (
             <button 
-              onClick={() => loginWithGoogle()}
-              className="w-full bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-3"
+              onClick={handleLogin}
+              className="w-full bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-3 mb-4"
             >
               <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 52.749 L -8.284 52.749 C -8.574 53.879 -9.214 54.819 -10.144 55.439 L -10.144 57.709 L -6.244 57.709 C -3.964 55.609 -3.264 52.549 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.844 60.279 L -10.144 58.009 C -11.204 58.719 -12.574 59.139 -14.754 59.139 C -18.964 59.139 -22.534 56.289 -23.794 52.479 L -27.814 52.479 L -27.814 55.599 C -25.824 59.559 -20.634 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -23.794 52.479 C -24.114 51.529 -24.294 50.539 -24.294 49.499 C -24.294 48.459 -24.114 47.469 -23.794 46.519 L -23.794 43.399 L -27.814 43.399 C -28.644 45.059 -29.114 46.929 -29.114 48.889 C -29.114 50.849 -28.644 52.719 -27.814 54.379 L -23.794 52.479 Z"/><path fill="#EA4335" d="M -14.754 39.839 C -12.984 39.839 -11.394 40.449 -10.144 41.649 L -6.144 37.649 C -8.804 35.159 -11.514 34.079 -14.754 34.079 C -20.634 34.079 -25.824 37.759 -27.814 41.719 L -23.794 44.839 C -22.534 41.029 -18.964 39.839 -14.754 39.839 Z"/></g></svg>
               Sign in with Google
             </button>
-          ) : (
+          ) : null}
+
+          {user && (
             <button 
               onClick={() => logout()}
               className="w-full bg-red-500/10 text-red-500 border border-red-500/20 px-8 py-4 rounded-xl font-bold hover:bg-red-500/20 transition-colors"
             >
-              Sign Out
+              Sign Out from {user.email}
             </button>
           )}
         </motion.div>
