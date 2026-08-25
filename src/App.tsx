@@ -30,7 +30,7 @@ function AnimatedRoutes() {
         <Route path="/about" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><AboutPage /></motion.div>} />
         <Route path="/contact" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><Contact /></motion.div>} />
         <Route path="/creator-network" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><CreatorNetwork /></motion.div>} />
-        <Route path="/admin" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><Admin /></motion.div>} />
+        <Route path="/plexa-secret-control-room-777" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><Admin /></motion.div>} />
       </Routes>
     </AnimatePresence>
   );

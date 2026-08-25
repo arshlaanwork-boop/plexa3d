@@ -22,6 +22,7 @@ export function Pricing() {
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
   const [goals, setGoals] = useState('');
+  const [couponCode, setCouponCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lucky draw states
@@ -40,9 +41,20 @@ export function Pricing() {
 
     setIsSubmitting(true);
     try {
-      // 1. Calculate the lucky discount beforehand so we can save it
-      const range = (selectedPkg.maxDiscount - selectedPkg.minDiscount) / 100;
-      const target = selectedPkg.minDiscount + Math.floor(Math.random() * (range + 1)) * 100;
+      const normalizedCoupon = couponCode.trim().toUpperCase();
+      let target = 0;
+
+      // Check for specific coupon codes
+      if (normalizedCoupon === 'VIP5000') {
+        target = 5000;
+      } else if (normalizedCoupon === 'PLEXAMAX') {
+        target = selectedPkg.maxDiscount;
+      } else {
+        // 1. Calculate the lucky discount normally if no valid coupon
+        const range = (selectedPkg.maxDiscount - selectedPkg.minDiscount) / 100;
+        target = selectedPkg.minDiscount + Math.floor(Math.random() * (range + 1)) * 100;
+      }
+
       setFinalDiscount(target);
 
       // 2. Save inquiry to Firestore directly (No Auth Required) - With 5s Timeout
@@ -52,6 +64,7 @@ export function Pricing() {
         businessName,
         phone,
         goals,
+        couponCode: normalizedCoupon || null,
         luckyDiscount: target,
         finalPrice: selectedPkg.normalPrice - target,
         createdAt: serverTimestamp()
@@ -388,6 +401,16 @@ export function Pricing() {
                         onChange={e => setGoals(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                         placeholder="e.g. More sales, brand awareness"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">Coupon / Promo Code (Optional)</label>
+                      <input 
+                        type="text"
+                        value={couponCode}
+                        onChange={e => setCouponCode(e.target.value)}
+                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white uppercase focus:outline-none focus:border-red-500 transition-colors"
+                        placeholder="Got a code?"
                       />
                     </div>
                     
