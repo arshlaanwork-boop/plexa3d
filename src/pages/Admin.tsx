@@ -60,7 +60,7 @@ export function Admin() {
     );
   }
 
-  if (!user) {
+  if (!user || user.email !== 'arshlaanshakil4a.jssp@gmail.com') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center font-sans">
         <motion.div 
@@ -72,19 +72,34 @@ export function Admin() {
             <LayoutDashboard className="text-red-500 w-8 h-8" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-gray-400 mb-8 text-sm">Please sign in with your Google account to access applications and inquiries.</p>
+          <p className="text-gray-400 mb-8 text-sm">
+            {user ? "You do not have permission to view this page." : "Please sign in with your authorized Google account to access applications and inquiries."}
+          </p>
           
-          <button 
-            onClick={() => loginWithGoogle()}
-            className="w-full bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-3"
-          >
-            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 52.749 L -8.284 52.749 C -8.574 53.879 -9.214 54.819 -10.144 55.439 L -10.144 57.709 L -6.244 57.709 C -3.964 55.609 -3.264 52.549 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.844 60.279 L -10.144 58.009 C -11.204 58.719 -12.574 59.139 -14.754 59.139 C -18.964 59.139 -22.534 56.289 -23.794 52.479 L -27.814 52.479 L -27.814 55.599 C -25.824 59.559 -20.634 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -23.794 52.479 C -24.114 51.529 -24.294 50.539 -24.294 49.499 C -24.294 48.459 -24.114 47.469 -23.794 46.519 L -23.794 43.399 L -27.814 43.399 C -28.644 45.059 -29.114 46.929 -29.114 48.889 C -29.114 50.849 -28.644 52.719 -27.814 54.379 L -23.794 52.479 Z"/><path fill="#EA4335" d="M -14.754 39.839 C -12.984 39.839 -11.394 40.449 -10.144 41.649 L -6.144 37.649 C -8.804 35.159 -11.514 34.079 -14.754 34.079 C -20.634 34.079 -25.824 37.759 -27.814 41.719 L -23.794 44.839 C -22.534 41.029 -18.964 39.839 -14.754 39.839 Z"/></g></svg>
-            Sign in with Google
-          </button>
+          {!user ? (
+            <button 
+              onClick={() => loginWithGoogle()}
+              className="w-full bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-3"
+            >
+              <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 52.749 L -8.284 52.749 C -8.574 53.879 -9.214 54.819 -10.144 55.439 L -10.144 57.709 L -6.244 57.709 C -3.964 55.609 -3.264 52.549 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.844 60.279 L -10.144 58.009 C -11.204 58.719 -12.574 59.139 -14.754 59.139 C -18.964 59.139 -22.534 56.289 -23.794 52.479 L -27.814 52.479 L -27.814 55.599 C -25.824 59.559 -20.634 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -23.794 52.479 C -24.114 51.529 -24.294 50.539 -24.294 49.499 C -24.294 48.459 -24.114 47.469 -23.794 46.519 L -23.794 43.399 L -27.814 43.399 C -28.644 45.059 -29.114 46.929 -29.114 48.889 C -29.114 50.849 -28.644 52.719 -27.814 54.379 L -23.794 52.479 Z"/><path fill="#EA4335" d="M -14.754 39.839 C -12.984 39.839 -11.394 40.449 -10.144 41.649 L -6.144 37.649 C -8.804 35.159 -11.514 34.079 -14.754 34.079 C -20.634 34.079 -25.824 37.759 -27.814 41.719 L -23.794 44.839 C -22.534 41.029 -18.964 39.839 -14.754 39.839 Z"/></g></svg>
+              Sign in with Google
+            </button>
+          ) : (
+            <button 
+              onClick={() => logout()}
+              className="w-full bg-red-500/10 text-red-500 border border-red-500/20 px-8 py-4 rounded-xl font-bold hover:bg-red-500/20 transition-colors"
+            >
+              Sign Out
+            </button>
+          )}
         </motion.div>
       </div>
     );
   }
+
+  // Calculate Analytics
+  const totalRevenue = inquiries.reduce((sum, inq) => sum + (Number(inq.finalPrice) || 0), 0);
+  const totalDiscountGiven = inquiries.reduce((sum, inq) => sum + (Number(inq.luckyDiscount) || 0), 0);
 
   return (
     <div className="min-h-screen bg-black text-white p-6 md:p-10 font-sans">
@@ -110,6 +125,27 @@ export function Admin() {
             </button>
           </div>
         </header>
+
+        {/* Analytics Section */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="text-gray-400 text-sm font-medium mb-1">Total Leads</div>
+            <div className="text-3xl font-black text-white">{inquiries.length}</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="text-gray-400 text-sm font-medium mb-1">Creator Apps</div>
+            <div className="text-3xl font-black text-white">{applications.length}</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="text-gray-400 text-sm font-medium mb-1 relative z-10">Total Pipeline Value</div>
+            <div className="text-3xl font-black text-green-400 relative z-10">₹{totalRevenue.toLocaleString('en-IN')}</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="text-gray-400 text-sm font-medium mb-1">Total Discounts Given</div>
+            <div className="text-3xl font-black text-red-400">₹{totalDiscountGiven.toLocaleString('en-IN')}</div>
+          </div>
+        </div>
 
         <div className="flex flex-wrap gap-4 mb-8">
           <button 

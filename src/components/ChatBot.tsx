@@ -91,8 +91,8 @@ export function ChatBot() {
       }));
       history.push({ role: 'user', parts: [{ text: userMessage }] });
 
-      // Call our backend API
-      const res = await fetch('/api/chat', {
+      // Call our backend API on Cloud Run
+      const res = await fetch('https://ais-pre-f2qye7mpnlfxl666a2aiy6-557205741820.asia-southeast1.run.app/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

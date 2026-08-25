@@ -1,8 +1,41 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Play, ArrowRight, Image as ImageIcon, Sparkles, MessageCircle, Globe, BarChart3, Workflow, Users, CheckCircle2 } from 'lucide-react';
 import { Footer } from '../components/Footer';
 
+const WHAT_WE_DO_DATA = {
+  Marketing: [
+    { title: "Content Marketing", desc: "Value-driven content to attract and retain your audience." },
+    { title: "Growth Marketing", desc: "Data-backed strategies to rapidly scale your user base." },
+    { title: "Performance Marketing", desc: "ROI-focused campaigns designed to maximize conversions." },
+    { title: "Influencer Marketing", desc: "Authentic partnerships that amplify your brand reach." },
+    { title: "Brand Marketing", desc: "Strategic positioning to build long-term brand equity." },
+    { title: "Social Media Marketing", desc: "Engaging campaigns to dominate your social channels." }
+  ],
+  Branding: [
+    { title: "Personal Branding", desc: "Elevate your individual authority and thought leadership." },
+    { title: "Product Branding", desc: "Distinctive identities that make your products stand out." },
+    { title: "Service Branding", desc: "Trust-building branding for professional service offerings." }
+  ],
+  Content: [
+    { title: "Entertaining", desc: "Viral-worthy content designed to capture attention." },
+    { title: "Educational", desc: "Informative pieces that establish your industry expertise." },
+    { title: "Inspirational", desc: "Motivational storytelling that connects emotionally." },
+    { title: "Promotional", desc: "High-converting assets that drive immediate sales." },
+    { title: "UGC", desc: "Authentic user-generated content that builds social proof." },
+    { title: "Community", desc: "Interactive content that fosters a loyal brand tribe." }
+  ],
+  Advertising: [
+    { title: "Social", desc: "Targeted ad campaigns across top social media platforms." },
+    { title: "Display", desc: "Visual banner ads that follow your audience across the web." },
+    { title: "Search", desc: "High-intent campaigns to capture users actively searching." },
+    { title: "Retargeting", desc: "Strategic campaigns to bring back lost visitors and convert." },
+    { title: "Video", desc: "Compelling YouTube and TikTok ads that demand attention." }
+  ]
+};
+
 export function Services() {
+  const [activeCategory, setActiveCategory] = useState<keyof typeof WHAT_WE_DO_DATA>('Marketing');
   const sectionVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { 
@@ -46,6 +79,75 @@ export function Services() {
             Comprehensive digital solutions designed to replace multiple disconnected agencies.
           </motion.p>
         </motion.div>
+
+        {/* WHAT WE DO SECTION */}
+        <motion.section 
+          variants={sectionVariants} 
+          initial="hidden" 
+          whileInView="visible" 
+          viewport={{ once: true, margin: "-100px" }}
+          className="relative pt-10 pb-20 border-b border-white/5"
+        >
+          <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-4 text-red-500">
+                <Sparkles size={20} />
+                <span className="text-sm font-bold uppercase tracking-widest">What We Do</span>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold text-white max-w-2xl leading-tight">
+                Our <span className="text-red-500 relative">Core Disciplines<svg className="absolute -bottom-2 left-0 w-full h-3 text-red-500/50" viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M0,10 Q50,20 100,10" stroke="currentColor" strokeWidth="4" fill="none"/></svg></span>
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4 mb-12">
+            {(Object.keys(WHAT_WE_DO_DATA) as Array<keyof typeof WHAT_WE_DO_DATA>).map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`px-8 py-4 rounded-full text-sm font-bold transition-all duration-300 relative ${
+                  activeCategory === category 
+                    ? 'bg-white text-black' 
+                    : 'bg-[#111] border border-white/10 text-gray-400 hover:text-white hover:border-white/30'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-[400px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeCategory}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {WHAT_WE_DO_DATA[activeCategory].map((item, index) => (
+                  <motion.div 
+                    key={item.title}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1, duration: 0.4, type: "spring" }}
+                    className="group relative bg-[#0a0a0a] border border-white/5 rounded-3xl p-8 hover:bg-[#111] transition-colors overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/0 via-transparent to-red-500/0 group-hover:from-red-500/5 group-hover:to-red-500/10 transition-colors duration-500"></div>
+                    <div className="relative z-10">
+                      <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:border-red-500/30 group-hover:bg-red-500/10 transition-colors">
+                        <ArrowRight size={16} className="text-gray-400 group-hover:text-red-500 group-hover:-rotate-45 transition-all duration-300" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-3 tracking-tight group-hover:text-red-100 transition-colors">{item.title}</h3>
+                      <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.section>
 
         {/* A. CONTENT & PRODUCTION */}
         <motion.section 

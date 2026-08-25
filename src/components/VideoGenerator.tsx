@@ -45,7 +45,7 @@ export function VideoGenerator() {
     setIsGenerating(true);
 
     try {
-      const res = await fetch('/api/generate-video', {
+      const res = await fetch('https://ais-pre-f2qye7mpnlfxl666a2aiy6-557205741820.asia-southeast1.run.app/api/generate-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: currentPrompt })
