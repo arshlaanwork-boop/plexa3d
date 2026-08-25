@@ -45,19 +45,29 @@ export function Admin() {
     
     // Listen to creator applications
     const appsRef = collection(db, 'creator_applications');
-    const qApps = query(appsRef, orderBy('createdAt', 'desc'));
     
-    const unsubscribeApps = onSnapshot(qApps, (snapshot) => {
+    const unsubscribeApps = onSnapshot(appsRef, (snapshot) => {
       const appsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort in memory to prevent documents with missing fields from being dropped
+      appsData.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.submittedAt?.toMillis ? a.submittedAt.toMillis() : 0);
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.submittedAt?.toMillis ? b.submittedAt.toMillis() : 0);
+        return timeB - timeA;
+      });
       setApplications(appsData);
     });
 
     // Listen to business inquiries
     const inquiriesRef = collection(db, 'inquiries');
-    const qInquiries = query(inquiriesRef, orderBy('createdAt', 'desc'));
     
-    const unsubscribeInquiries = onSnapshot(qInquiries, (snapshot) => {
+    const unsubscribeInquiries = onSnapshot(inquiriesRef, (snapshot) => {
       const inquiriesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort in memory
+      inquiriesData.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return timeB - timeA;
+      });
       setInquiries(inquiriesData);
     });
 
@@ -273,7 +283,7 @@ export function Admin() {
                         </td>
                         <td className="p-4">
                           <span className="inline-block px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-bold uppercase tracking-wide">
-                            {app.primaryRole}
+                            {app.primary_role || app.primaryRole || 'UNKNOWN ROLE'}
                           </span>
                         </td>
                         <td className="p-4 text-sm text-gray-300">

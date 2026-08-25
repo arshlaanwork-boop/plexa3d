@@ -148,7 +148,7 @@ export function CreatorNetwork() {
         try {
           const docData = {
             ...data,
-            submittedAt: serverTimestamp()
+            createdAt: serverTimestamp()
           };
           
           const uploadPromise = addDoc(collection(db, 'creator_applications'), docData);
