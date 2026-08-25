@@ -473,7 +473,7 @@ export function Pricing() {
                   </div>
 
                   <a 
-                    href={`https://wa.me/919999999999?text=Hi%20PLEXA!%20I%20just%20spun%20the%20Lucky%20Draw%20and%20got%20the%20${selectedPkg.name}%20Package%20for%20a%20final%20price%20of%20₹${(selectedPkg.normalPrice - finalDiscount).toLocaleString('en-IN')}!%20My%20Business:%20${businessName}.%20How%20do%20I%20complete%20my%20payment?`}
+                    href={`https://wa.me/918709321770?text=Hi%20PLEXA!%20I%20just%20spun%20the%20Lucky%20Draw%20and%20got%20the%20${selectedPkg.name}%20Package%20for%20a%20final%20price%20of%20₹${(selectedPkg.normalPrice - finalDiscount).toLocaleString('en-IN')}!%20My%20Business:%20${businessName}.%20How%20do%20I%20complete%20my%20payment?`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] transition-colors font-bold text-white shadow-[0_0_20px_rgba(37,211,102,0.3)] flex items-center justify-center gap-2"

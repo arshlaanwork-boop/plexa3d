@@ -17,7 +17,6 @@ export function Navbar({ onOpenDashboard }: { onOpenDashboard?: () => void }) {
     { name: 'About', path: '/about' },
     { name: 'Creator Network', path: '/creator-network' },
     { name: 'Contact', path: '/contact' },
-    { name: 'Admin', path: '/admin' },
   ];
 
   return (

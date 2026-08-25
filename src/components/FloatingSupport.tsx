@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export function FloatingSupport() {
   const [isOpen, setIsOpen] = useState(false);
-  const whatsappNumber = "919999999999"; // Replace with real number later
+  const whatsappNumber = "918709321770"; // Replace with real number later
 
   return (
     <div className="fixed bottom-6 right-6 z-[90] font-sans">
