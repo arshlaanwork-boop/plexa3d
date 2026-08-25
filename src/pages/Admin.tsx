@@ -1,43 +1,47 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { db, auth, loginWithGoogle, logout } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { LogOut, ExternalLink, MessageCircle, FileText, LayoutDashboard, Loader2, User as UserIcon, ClipboardList, AlertCircle } from 'lucide-react';
+import { LogOut, ExternalLink, MessageCircle, FileText, LayoutDashboard, Loader2, ClipboardList, Lock, AlertCircle } from 'lucide-react';
 
 export function Admin() {
-  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loginError, setLoginError] = useState<string | null>(null);
   
   const [applications, setApplications] = useState<any[]>([]);
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'inquiries' | 'applications'>('inquiries');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    // Check local storage for session
+    const session = localStorage.getItem('plexa_admin_auth');
+    if (session === 'true') {
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
   }, []);
 
-  const handleLogin = async () => {
-    setLoginError(null);
-    try {
-      await loginWithGoogle();
-    } catch (error: any) {
-      console.error("Login failed:", error);
-      if (error.code === 'auth/unauthorized-domain') {
-        setLoginError('This domain is not authorized in Firebase. Please add "goplexa.in" to your Firebase Console -> Authentication -> Settings -> Authorized domains.');
-      } else {
-        setLoginError(`Login failed: ${error.message}`);
-      }
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === 'plexa2024') {
+      setIsAuthenticated(true);
+      setLoginError(false);
+      localStorage.setItem('plexa_admin_auth', 'true');
+    } else {
+      setLoginError(true);
     }
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPasswordInput('');
+    localStorage.removeItem('plexa_admin_auth');
+  };
+
   useEffect(() => {
-    if (!user || user.email !== 'arshlaanshakil4a.jssp@gmail.com') return;
+    if (!isAuthenticated) return;
     
     // Listen to creator applications
     const appsRef = collection(db, 'creator_applications');
@@ -46,8 +50,6 @@ export function Admin() {
     const unsubscribeApps = onSnapshot(qApps, (snapshot) => {
       const appsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setApplications(appsData);
-    }, (error) => {
-      console.error("Error fetching applications:", error);
     });
 
     // Listen to business inquiries
@@ -57,15 +59,13 @@ export function Admin() {
     const unsubscribeInquiries = onSnapshot(qInquiries, (snapshot) => {
       const inquiriesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setInquiries(inquiriesData);
-    }, (error) => {
-      console.error("Error fetching inquiries:", error);
     });
 
     return () => {
       unsubscribeApps();
       unsubscribeInquiries();
     };
-  }, [user]);
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -75,7 +75,7 @@ export function Admin() {
     );
   }
 
-  if (!user || user.email !== 'arshlaanshakil4a.jssp@gmail.com') {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center font-sans">
         <motion.div 
@@ -84,40 +84,33 @@ export function Admin() {
           className="bg-[#111] border border-white/10 p-8 rounded-2xl w-full max-w-md shadow-2xl"
         >
           <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 mx-auto">
-            <LayoutDashboard className="text-red-500 w-8 h-8" />
+            <Lock className="text-red-500 w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Admin Access</h1>
           <p className="text-gray-400 mb-8 text-sm">
-            {user && user.email !== 'arshlaanshakil4a.jssp@gmail.com' 
-              ? `You are logged in as ${user.email}, but this account does not have Admin access.` 
-              : "Please sign in with your authorized Google account to access applications and inquiries."}
+            Enter your secret admin passcode to view leads.
           </p>
-
-          {loginError && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3 text-left">
-              <AlertCircle className="text-red-500 w-5 h-5 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-400">{loginError}</p>
-            </div>
-          )}
           
-          {!user || user.email !== 'arshlaanshakil4a.jssp@gmail.com' ? (
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <input 
+              type="password" 
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="Enter passcode..."
+              className="w-full bg-black border border-white/20 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-red-500 transition-colors text-center text-lg tracking-widest"
+            />
+            {loginError && (
+              <div className="text-red-500 text-sm flex items-center justify-center gap-2">
+                <AlertCircle size={16} /> Incorrect passcode
+              </div>
+            )}
             <button 
-              onClick={handleLogin}
-              className="w-full bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-3 mb-4"
+              type="submit"
+              className="w-full bg-red-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-red-700 transition-colors"
             >
-              <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 52.749 L -8.284 52.749 C -8.574 53.879 -9.214 54.819 -10.144 55.439 L -10.144 57.709 L -6.244 57.709 C -3.964 55.609 -3.264 52.549 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.844 60.279 L -10.144 58.009 C -11.204 58.719 -12.574 59.139 -14.754 59.139 C -18.964 59.139 -22.534 56.289 -23.794 52.479 L -27.814 52.479 L -27.814 55.599 C -25.824 59.559 -20.634 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -23.794 52.479 C -24.114 51.529 -24.294 50.539 -24.294 49.499 C -24.294 48.459 -24.114 47.469 -23.794 46.519 L -23.794 43.399 L -27.814 43.399 C -28.644 45.059 -29.114 46.929 -29.114 48.889 C -29.114 50.849 -28.644 52.719 -27.814 54.379 L -23.794 52.479 Z"/><path fill="#EA4335" d="M -14.754 39.839 C -12.984 39.839 -11.394 40.449 -10.144 41.649 L -6.144 37.649 C -8.804 35.159 -11.514 34.079 -14.754 34.079 C -20.634 34.079 -25.824 37.759 -27.814 41.719 L -23.794 44.839 C -22.534 41.029 -18.964 39.839 -14.754 39.839 Z"/></g></svg>
-              Sign in with Google
+              Unlock Dashboard
             </button>
-          ) : null}
-
-          {user && (
-            <button 
-              onClick={() => logout()}
-              className="w-full bg-red-500/10 text-red-500 border border-red-500/20 px-8 py-4 rounded-xl font-bold hover:bg-red-500/20 transition-colors"
-            >
-              Sign Out from {user.email}
-            </button>
-          )}
+          </form>
         </motion.div>
       </div>
     );
@@ -140,14 +133,13 @@ export function Admin() {
           </div>
           
           <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-full">
-            <UserIcon size={16} className="text-gray-400" />
-            <span className="text-sm font-medium text-gray-300">{user.email}</span>
+            <span className="text-sm font-medium text-green-400">Authenticated</span>
             <div className="w-px h-4 bg-white/10 mx-2"></div>
             <button 
-              onClick={() => logout()}
+              onClick={handleLogout}
               className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 text-sm font-bold"
             >
-              <LogOut size={14} /> Logout
+              <LogOut size={14} /> Lock Dashboard
             </button>
           </div>
         </header>
@@ -175,13 +167,13 @@ export function Admin() {
 
         <div className="flex flex-wrap gap-4 mb-8">
           <button 
-            className={`px-6 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'inquiries' ? 'bg-red-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+             className={`px-6 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'inquiries' ? 'bg-red-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
             onClick={() => setActiveTab('inquiries')}
           >
             <ClipboardList size={16} /> Business Inquiries ({inquiries.length})
           </button>
           <button 
-            className={`px-6 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'applications' ? 'bg-red-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+             className={`px-6 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'applications' ? 'bg-red-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
             onClick={() => setActiveTab('applications')}
           >
             <FileText size={16} /> Creator Applications ({applications.length})
