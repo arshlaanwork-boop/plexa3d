@@ -45,8 +45,8 @@ export function Pricing() {
       const target = selectedPkg.minDiscount + Math.floor(Math.random() * (range + 1)) * 100;
       setFinalDiscount(target);
 
-      // 2. Save inquiry to Firestore directly (No Auth Required)
-      await addDoc(collection(db, 'inquiries'), {
+      // 2. Save inquiry to Firestore directly (No Auth Required) - With 5s Timeout
+      const docData = {
         packageId: selectedPkg.id,
         packageName: selectedPkg.name,
         businessName,
@@ -55,7 +55,12 @@ export function Pricing() {
         luckyDiscount: target,
         finalPrice: selectedPkg.normalPrice - target,
         createdAt: serverTimestamp()
-      });
+      };
+
+      const uploadPromise = addDoc(collection(db, 'inquiries'), docData);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+      
+      await Promise.race([uploadPromise, timeoutPromise]);
       
       // 3. Move to spinning animation
       setStep('spinning');
@@ -63,7 +68,7 @@ export function Pricing() {
       
     } catch (error) {
       console.error('Failed to submit inquiry:', error);
-      alert('Failed to submit your details. Please check your connection.');
+      alert('Failed to connect to the database. Please check your internet connection or try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -144,23 +144,26 @@ export function CreatorNetwork() {
         const formData = new FormData(formRef.current);
         const data = Object.fromEntries(formData.entries());
         
-        // Push to Firebase (best effort)
+        // Push to Firebase with 5 second timeout to avoid indefinite hanging
         try {
-          await addDoc(collection(db, 'creator_applications'), {
+          const docData = {
             ...data,
             submittedAt: serverTimestamp()
-          });
+          };
+          
+          const uploadPromise = addDoc(collection(db, 'creator_applications'), docData);
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+          
+          await Promise.race([uploadPromise, timeoutPromise]);
         } catch (err) {
-          console.warn("Firestore permissions might be restrictive, falling back to local success state.", err);
+          console.warn("Firestore upload delayed or failed, proceeding to success state.", err);
         }
       }
       
       // Show success state
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setIsSubmitted(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 1000);
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error(error);
       setIsSubmitting(false);
