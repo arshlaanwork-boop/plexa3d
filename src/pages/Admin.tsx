@@ -1,28 +1,28 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { db } from '../lib/firebase';
+import { db, auth, loginWithGoogle, logout } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { LogOut, ExternalLink, MessageCircle, FileText, LayoutDashboard, Loader2, User as UserIcon, Lock, ClipboardList } from 'lucide-react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { LogOut, ExternalLink, MessageCircle, FileText, LayoutDashboard, Loader2, User as UserIcon, ClipboardList } from 'lucide-react';
 
 export function Admin() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   
   const [applications, setApplications] = useState<any[]>([]);
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'inquiries' | 'applications'>('inquiries');
 
   useEffect(() => {
-    // Check local storage for simple auth
-    const savedAuth = localStorage.getItem('plexa_admin_auth');
-    if (savedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!user) return;
     
     // Listen to creator applications
     const appsRef = collection(db, 'creator_applications');
@@ -50,25 +50,17 @@ export function Admin() {
       unsubscribeApps();
       unsubscribeInquiries();
     };
-  }, [isAuthenticated]);
+  }, [user]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === 'plexa2024') {
-      setIsAuthenticated(true);
-      localStorage.setItem('plexa_admin_auth', 'true');
-      setLoginError('');
-    } else {
-      setLoginError('Incorrect password');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+      </div>
+    );
+  }
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('plexa_admin_auth');
-  };
-
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center font-sans">
         <motion.div 
@@ -77,29 +69,18 @@ export function Admin() {
           className="bg-[#111] border border-white/10 p-8 rounded-2xl w-full max-w-md shadow-2xl"
         >
           <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 mx-auto">
-            <Lock className="text-red-500 w-8 h-8" />
+            <LayoutDashboard className="text-red-500 w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Access</h1>
-          <p className="text-gray-400 mb-8 text-sm">Please enter the admin password to view inquiries and applications.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+          <p className="text-gray-400 mb-8 text-sm">Please sign in with your Google account to access applications and inquiries.</p>
           
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-center focus:outline-none focus:border-red-500 transition-colors"
-              />
-              {loginError && <p className="text-red-500 text-xs mt-2">{loginError}</p>}
-            </div>
-            <button 
-              type="submit"
-              className="w-full bg-red-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-600 transition-colors"
-            >
-              Unlock Dashboard
-            </button>
-          </form>
+          <button 
+            onClick={() => loginWithGoogle()}
+            className="w-full bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-3"
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 52.749 L -8.284 52.749 C -8.574 53.879 -9.214 54.819 -10.144 55.439 L -10.144 57.709 L -6.244 57.709 C -3.964 55.609 -3.264 52.549 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.844 60.279 L -10.144 58.009 C -11.204 58.719 -12.574 59.139 -14.754 59.139 C -18.964 59.139 -22.534 56.289 -23.794 52.479 L -27.814 52.479 L -27.814 55.599 C -25.824 59.559 -20.634 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -23.794 52.479 C -24.114 51.529 -24.294 50.539 -24.294 49.499 C -24.294 48.459 -24.114 47.469 -23.794 46.519 L -23.794 43.399 L -27.814 43.399 C -28.644 45.059 -29.114 46.929 -29.114 48.889 C -29.114 50.849 -28.644 52.719 -27.814 54.379 L -23.794 52.479 Z"/><path fill="#EA4335" d="M -14.754 39.839 C -12.984 39.839 -11.394 40.449 -10.144 41.649 L -6.144 37.649 C -8.804 35.159 -11.514 34.079 -14.754 34.079 C -20.634 34.079 -25.824 37.759 -27.814 41.719 L -23.794 44.839 C -22.534 41.029 -18.964 39.839 -14.754 39.839 Z"/></g></svg>
+            Sign in with Google
+          </button>
         </motion.div>
       </div>
     );
@@ -119,13 +100,13 @@ export function Admin() {
           
           <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-full">
             <UserIcon size={16} className="text-gray-400" />
-            <span className="text-sm font-medium text-gray-300">Admin</span>
+            <span className="text-sm font-medium text-gray-300">{user.email}</span>
             <div className="w-px h-4 bg-white/10 mx-2"></div>
             <button 
-              onClick={handleLogout}
+              onClick={() => logout()}
               className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 text-sm font-bold"
             >
-              <LogOut size={14} /> Lock Dashboard
+              <LogOut size={14} /> Logout
             </button>
           </div>
         </header>

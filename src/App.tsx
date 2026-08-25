@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { ScrollToTop } from './components/ScrollToTop';
 import { Navbar } from './components/Navbar';
@@ -40,7 +40,7 @@ export default function App() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <ScrollToTop />
       <div className="min-h-screen bg-black font-sans selection:bg-red-500/30">
         <Navbar onOpenDashboard={() => setIsDashboardOpen(true)} />
@@ -48,7 +48,7 @@ export default function App() {
         {isDashboardOpen && <Dashboard onClose={() => setIsDashboardOpen(false)} />}
         <FloatingSupport />
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
